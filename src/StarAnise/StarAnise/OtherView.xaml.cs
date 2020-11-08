@@ -34,7 +34,7 @@ namespace StarAnise
 				.AddTo(DisposeBag);
 
 			IsDefeated = overlay.State.InBattle()
-				.Select(it => it.DefeatedOthers().Contains(number))
+				.Select(it => it.IsDefeated(number))
 				.ToReadOnlyReactiveProperty()
 				.AddTo(DisposeBag);
 
@@ -61,8 +61,8 @@ namespace StarAnise
 				.ToReactiveCommand()
 				.AddTo(DisposeBag);
 
-			DefeatedCommand = IsDefeated
-				.Select(it => !it)
+			DefeatedCommand = overlay.State.InBattle()
+				.Select(it => it.LastRound.HasValue && !it.IsDefeated(number))
 				.ToReactiveCommand()
 				.AddTo(DisposeBag);
 

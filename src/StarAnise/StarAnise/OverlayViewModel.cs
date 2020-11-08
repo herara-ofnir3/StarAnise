@@ -113,6 +113,9 @@ namespace StarAnise
 				public IReadOnlyList<PlayerNumber> DefeatedOthers()
 					=> Rounds.SelectMany(it => it.Defeateds).ToArray();
 
+				public bool IsDefeated(PlayerNumber number)
+					=> DefeatedOthers().Contains(number);
+
 				public IReadOnlyList<PlayerNumber> AlivedOthers()
 					=> Others.Except(DefeatedOthers()).ToArray();
 
