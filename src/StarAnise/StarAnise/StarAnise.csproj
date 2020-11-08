@@ -83,9 +83,7 @@
     </ApplicationDefinition>
     <Compile Include="OverlayViewModel.cs" />
     <Compile Include="Player.cs" />
-    <Compile Include="PlayerView.xaml.cs">
-      <DependentUpon>PlayerView.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="PlayerViewModel.cs" />
     <Compile Include="SelfView.xaml.cs">
       <DependentUpon>SelfView.xaml</DependentUpon>
     </Compile>
@@ -101,10 +99,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="OverlayWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="PlayerView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
