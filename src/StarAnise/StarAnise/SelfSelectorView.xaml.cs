@@ -1,4 +1,5 @@
 ﻿using Reactive.Bindings;
+using Reactive.Bindings.Extensions;
 using System;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -18,14 +19,15 @@ namespace StarAnise
 		}
 	}
 
-	public class SelfSelectorViewModel
+	public class SelfSelectorViewModel : ViewModel
 	{
 		public SelfSelectorViewModel(PlayerNumber number, OverlayViewModel overlay)
 		{
 			Number = number;
 			SelectCommand = new ReactiveCommand();
 			SelectCommand
-				.Subscribe(_ => overlay.Ready(number));
+				.Subscribe(_ => overlay.Ready(number))
+				.AddTo(DisposeBag);
 		}
 
 		public PlayerNumber Number { get; }

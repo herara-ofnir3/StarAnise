@@ -1,4 +1,5 @@
 ﻿using Reactive.Bindings;
+using Reactive.Bindings.Extensions;
 using System;
 using System.Linq;
 using System.Reactive;
@@ -29,13 +30,18 @@ namespace StarAnise
 		{
 			IsNextMatchCandidate = overlay.State.InBattle()
 				.Select(it => it.NextMatchCandidates().Contains(number))
-				.ToReactiveProperty();
+				.ToReactiveProperty()
+				.AddTo(DisposeBag);
 
 			IsDefeated = overlay.State.InBattle()
 				.Select(it => it.DefeatedOthers().Contains(number))
-				.ToReadOnlyReactiveProperty();
+				.ToReadOnlyReactiveProperty()
+				.AddTo(DisposeBag);
 
-			IsAlived = IsDefeated.Select(it => !it).ToReadOnlyReactiveProperty();
+			IsAlived = IsDefeated
+				.Select(it => !it)
+				.ToReadOnlyReactiveProperty()
+				.AddTo(DisposeBag);
 
 			BackgroundColor = Observable.CombineLatest(IsNextMatchCandidate, IsDefeated, (a, b) => (isNextMatchCandidate: a, isDefeated: b))
 				.Select(it =>
@@ -48,16 +54,25 @@ namespace StarAnise
 
 					return new SolidColorBrush(Colors.Transparent);
 				})
-				.ToReadOnlyReactiveProperty();
+				.ToReadOnlyReactiveProperty()
+				.AddTo(DisposeBag);
 
-			MatchedCommand = IsNextMatchCandidate.ToReactiveCommand();
-			DefeatedCommand = IsDefeated.Select(it => !it).ToReactiveCommand();
+			MatchedCommand = IsNextMatchCandidate
+				.ToReactiveCommand()
+				.AddTo(DisposeBag);
+
+			DefeatedCommand = IsDefeated
+				.Select(it => !it)
+				.ToReactiveCommand()
+				.AddTo(DisposeBag);
 
 			MatchedCommand
-				.Subscribe(_ => overlay.Matched(number));
+				.Subscribe(_ => overlay.Matched(number))
+				.AddTo(DisposeBag);
 
 			DefeatedCommand
-				.Subscribe(_ => overlay.Defeated(number));
+				.Subscribe(_ => overlay.Defeated(number))
+				.AddTo(DisposeBag);
 		}
 
 		public IReadOnlyReactiveProperty<bool> IsDefeated { get; }

@@ -1,6 +1,6 @@
 ﻿namespace StarAnise
 {
-	public class PlayerViewModel
+	public class PlayerViewModel : ViewModel
 	{
 		public PlayerViewModel(PlayerNumber number)
 		{

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,9 +14,11 @@ namespace StarAnise
 	/// </summary>
 	public partial class OverlayWindow : Window
 	{
+		CompositeDisposable DisposeBag = new CompositeDisposable();
+
         public OverlayWindow()
         {
-			ViewModel = new OverlayViewModel();
+			ViewModel = new OverlayViewModel().AddTo(DisposeBag);
 			DataContext = ViewModel;
             InitializeComponent();
 
@@ -23,7 +26,8 @@ namespace StarAnise
 				ViewModel.SelfSelectors.ObserveRemoveChanged().Select(vm => vm.Number),
 				ViewModel.Players.ObserveRemoveChanged().Select(vm => vm.Number)
 				)
-				.Subscribe(number => Player(number, g => g.Children.Clear()));
+				.Subscribe(number => Player(number, g => g.Children.Clear()))
+				.AddTo(DisposeBag);
 
 			Observable.Merge(
 				ViewModel.SelfSelectors.ObserveResetChanged(),
@@ -32,21 +36,25 @@ namespace StarAnise
 				{
 					foreach (var grid in PlayerViewContainers())
 						grid.Children.Clear();
-				});
+				})
+				.AddTo(DisposeBag);
 
 			ViewModel.SelfSelectors
 				.ObserveAddChanged()
-				.Subscribe(it => Player(it.Number, g => g.Children.Add(new SelfSelectorView(it))));
+				.Subscribe(it => Player(it.Number, g => g.Children.Add(new SelfSelectorView(it))))
+				.AddTo(DisposeBag);
 
 			ViewModel.Players
 				.ObserveAddChanged()
 				.OfType<OtherViewModel>()
-				.Subscribe(vm => Player(vm.Number, g => g.Children.Add(new OtherView(vm))));
+				.Subscribe(vm => Player(vm.Number, g => g.Children.Add(new OtherView(vm))))
+				.AddTo(DisposeBag);
 
 			ViewModel.Players
 				.ObserveAddChanged()
 				.OfType<SelfViewModel>()
-				.Subscribe(vm => Player(vm.Number, g => g.Children.Add(new SelfView(vm))));
+				.Subscribe(vm => Player(vm.Number, g => g.Children.Add(new SelfView(vm))))
+				.AddTo(DisposeBag);
 
 			ViewModel.Initialize();
 		}
@@ -78,5 +86,11 @@ namespace StarAnise
 				PlayerNumber.P8 => Player8,
 				_ => throw new ArgumentOutOfRangeException()
 			});
+
+		protected override void OnClosed(EventArgs e)
+		{
+			DisposeBag.Dispose();
+			base.OnClosed(e);
+		}
 	}
 }

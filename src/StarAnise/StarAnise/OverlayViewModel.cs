@@ -1,4 +1,5 @@
 ﻿using Reactive.Bindings;
+using Reactive.Bindings.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Reactive.Linq;
 
 namespace StarAnise
 {
-	public class OverlayViewModel
+	public class OverlayViewModel : ViewModel
 	{
 		public ReactiveProperty<StateType> State { get; } = new ReactiveProperty<StateType>(new StateType.Standby(null));
 		public ReactiveCollection<SelfSelectorViewModel> SelfSelectors { get; } = new ReactiveCollection<SelfSelectorViewModel>();
@@ -22,7 +23,8 @@ namespace StarAnise
 				{
 					if (State.Value is StateType.InBattle inBattle)
 						State.Value = inBattle.Reset();
-				});
+				})
+				.AddTo(DisposeBag);
 		}
 
 		public void Initialize()
@@ -30,24 +32,32 @@ namespace StarAnise
 			State.Standby()
 				.Subscribe(_ =>
 				{
+					foreach (var player in Players)
+						player.Dispose();
 					Players.Clear();
+
 					foreach (var number in Player.AllNumbers)
-						SelfSelectors.Add(new SelfSelectorViewModel(number, this));
-				});
+						SelfSelectors.Add(new SelfSelectorViewModel(number, this).AddTo(DisposeBag));
+				})
+				.AddTo(DisposeBag);
 
 			State.InBattle()
 				.Where(it => it.Prev.IsStandby)
 				.Subscribe(inBattle =>
 				{
+					foreach (var selfSelector in SelfSelectors)
+						selfSelector.Dispose();
 					SelfSelectors.Clear();
+
 					foreach (var number in Player.AllNumbers)
 					{
 						if (number == inBattle.Self)
-							Players.Add(new SelfViewModel(number));
+							Players.Add(new SelfViewModel(number).AddTo(DisposeBag));
 						else
-							Players.Add(new OtherViewModel(number, this));
+							Players.Add(new OtherViewModel(number, this).AddTo(DisposeBag));
 					}
-				});
+				})
+				.AddTo(DisposeBag);
 		}
 
 		public void Ready(PlayerNumber self)
